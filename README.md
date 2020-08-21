@@ -1,4 +1,6 @@
-# vue-list
+Test autocomplete dropdown app
+
+https://vue-autocomplete-list.netlify.app/
 
 ## Project setup
 ```
