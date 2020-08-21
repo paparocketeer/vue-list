@@ -1,11 +1,16 @@
 <template>
-  <list :options="options">
-    <template slot="item" slot-scope="option">
-      <span>
-        <img :src="option.thumbnail" />
-      </span>
-    </template>
-  </list>
+  <div class="container">
+    <pre>
+      {{selectedOption}}
+    </pre>
+    <list :options="options" @itemSelected="onOptionSelect">
+      <template slot="item" slot-scope="option">
+        <span>
+          <img :src="option.thumbnail" />
+        </span>
+      </template>
+    </list>
+  </div>
 </template>
 
 <script>
@@ -17,8 +22,14 @@ export default {
   components: {
     List,
   },
+  methods: {
+    onOptionSelect(option) {
+      this.selectedOption = option
+    }
+  },
 
   data: () => ({
+    selectedOption: "{}",
     options: [
       {
         id: 1,
@@ -1026,5 +1037,29 @@ export default {
 </script>
 
 <style>
-
+html,
+body {
+  background: #eee;
+  font-family: Proxima;
+}
+@font-face {
+  font-family: Proxima;
+  src: url(assets/fonts/ProximaNova-Regular.woff) format("woff"),
+    url(assets/fonts/ProximaNova-Regular.ttf) format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+.container{
+  width: 400px;
+  margin: 0 auto;
+}
+pre {
+  position: absolute;
+  top: 0;
+  background: #999;
+  border-radius: 5px;
+  padding: 20px;
+  width: 360px;
+  white-space: normal;
+}
 </style>

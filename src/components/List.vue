@@ -7,10 +7,8 @@
         placeholder
         @input="onInput($event.target.value)"
         @keyup.enter="select"
-        @keyup.tab="select"
         @keydown.down="onDown"
         @keydown.up="onUp"
-        @keyup.esc="isOpen = false"
         ref="dropdown"
         v-model="search"
       />
@@ -20,7 +18,7 @@
         @click="toggle"
         :class="{'chevron-active' : isOpened, 'chevron-inactive' : !isOpened}"
       ></i>
-      <close-thick-icon v-if="search.length" class="discard" @click="discardSelection()" />
+      <i v-if="search.length" class="close" @click="discardSelection()"></i>
     </p>
     <transition name="fade" mode="in-out">
       <ul class="options-list" v-show="isOpened" ref="list">
@@ -30,30 +28,32 @@
           @mousedown="select"
           :class="{'selected': i === selected}"
           :key="i"
+          ref="li"
         >
           {{ option.name }}
           <slot name="item" :title="option.name" :thumbnail="option.thumbnail" />
         </li>
+        <trigger @triggerIntersected="page+=1" />
       </ul>
     </transition>
-    <pre>
-      {{selectedOption ? selectedOption : "{}"}}
-    </pre>
   </div>
 </template>
 
 <script>
-import CloseThickIcon from "vue-material-design-icons/CloseThick.vue";
+import Trigger from "@/components/Trigger";
 export default {
+  name: "List",
   components: {
-    CloseThickIcon,
+    Trigger,
   },
   data() {
     return {
       isOpened: false,
       selected: null,
       search: "",
-      selectedOption: {},
+      // selectedOption: {},
+      page: 1,
+      limit: 10,
     };
   },
   props: {
@@ -66,22 +66,25 @@ export default {
     onInput(value) {
       this.isOpened = !!value;
       this.selected = null;
+      this.page = 1;
     },
     select() {
-      this.selectedOption = this.filteredItems[this.selected];
-      this.$emit("select-item", this.selectedOption);
-      this.search = this.selectedOption.name;
+      let selectedOption = this.filteredItems[this.selected];
+      this.$emit("itemSelected", selectedOption);
+      this.search = selectedOption.name;
       this.isOpened = false;
+      this.page = 1;
     },
     discardSelection() {
-      this.selectedOption = {};
+      this.$emit("itemSelected", "{}");
       this.search = "";
+      this.page = 1;
     },
     scrollWatcher() {
-      let elHeight = document.querySelector("li").clientHeight;
+      let elHeight = this.$refs.li[0].clientHeight;
       let scrollTop = this.$refs.list.scrollTop;
       let viewport =
-        scrollTop + document.querySelector(".options-list").clientHeight;
+        scrollTop + this.$refs.list.clientHeight;
       let elOffset = elHeight * this.selected;
       if (elOffset < scrollTop || elOffset + elHeight > viewport)
         this.$refs.list.scrollTop = elOffset;
@@ -90,7 +93,7 @@ export default {
       if (!this.isOpened) {
         return;
       }
-      this.selected = (this.selected + 1) % this.filteredItems.length;
+      this.selected = (this.selected == null ? 0 : this.selected + 1) % this.filteredItems.length;
       this.scrollWatcher();
     },
     onUp() {
@@ -107,35 +110,23 @@ export default {
     toggle() {
       this.isOpened = !this.isOpened;
       if (this.isOpened) {
-        this.$refs.dropdown.blur();
+        this.$refs.dropdown.focus();
       }
     },
   },
   computed: {
     filteredItems() {
       const condition = new RegExp(this.search, "i");
-      return this.options.filter((item) => item.name.match(condition));
+      return this.options
+        .filter((item) => item.name.match(condition))
+        .slice(0, this.page * this.limit);
     },
   },
 };
 </script>
 
 <style>
-html,
-body {
-  background: #eee;
-  font-family: Proxima;
-}
-@font-face {
-  font-family: Proxima;
-  src: url(../assets/fonts/ProximaNova-Regular.woff) format("woff"),
-    url(../assets/fonts/ProximaNova-Regular.ttf) format("truetype");
-  font-weight: 400;
-  font-style: normal;
-}
 .autocomplete {
-  width: 400px;
-  margin: 0 auto;
   padding-top: 4rem;
 }
 ul.options-list li.selected {
@@ -167,7 +158,7 @@ p.control {
   z-index: 10;
 }
 
-p.control i {
+p.control .chevron {
   width: 70px;
   top: 0;
   border: none;
@@ -245,6 +236,31 @@ ul.options-list li span {
   will-change: transform;
 }
 
+.close {
+  cursor: pointer;
+  right: 60px;
+  top: 12px;
+  color: #eee;
+  position: absolute;
+  width: 32px;
+  height: 32px;
+}
+.close:before,
+.close:after {
+  position: absolute;
+  left: 15px;
+  content: " ";
+  height: 20px;
+  width: 4px;
+  background-color: #eee;
+}
+.close:before {
+  transform: rotate(45deg);
+}
+.close:after {
+  transform: rotate(-45deg);
+}
+
 ul.options-list li:last-child {
   border-bottom: none;
 }
@@ -258,21 +274,5 @@ ul.options-list li:last-child {
   opacity: 0;
   will-change: opacity;
   transform: translateY(-30px);
-}
-.discard {
-  position: absolute;
-  cursor: pointer;
-  right: 55px;
-  top: 10px;
-  color: #eee;
-}
-pre {
-  position: absolute;
-  top: 0;
-  background: #999;
-  border-radius: 5px;
-  padding: 20px;
-  width: 360px;
-  white-space: normal;
 }
 </style>
