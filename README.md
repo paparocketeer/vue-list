@@ -1,6 +1,8 @@
 Test autocomplete dropdown app
 
-https://vue-autocomplete-list.netlify.app/
+[Demo](https://vue-autocomplete-list.netlify.app/)
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/d56efc51-a3a6-4492-9e17-963b17199af2/deploy-status)](https://app.netlify.com/sites/vue-autocomplete-list/deploys)
 
 ## Project setup
 ```
